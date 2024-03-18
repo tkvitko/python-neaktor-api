@@ -1,7 +1,9 @@
 # Python Neaktor API wrapper
 Python lib to interact with Neaktor
+
 https://neaktor.com/
-https://developers.neaktor.com/#/overview
+
+https://developers.neaktor.com/#/overview 
 
 ## Installation
 ``pip install -r requirements.txt``
