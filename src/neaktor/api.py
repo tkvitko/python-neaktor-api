@@ -9,6 +9,7 @@ import requests
 
 from .constants import DEFAULT_PAGE_SIZE
 from .exceptions import NoAuthParam, NeaktorException
+from .objects import User, Task, TaskModel, Comment
 
 
 class NeaktorApiClient:
@@ -111,7 +112,7 @@ class NeaktorApiClient:
 
     def _add_object(self,
                     api_path: str,
-                    parent_id: str,
+                    parent_id: Union[int, str],
                     fields: dict = None,
                     assignee_id: int = None,
                     assignee_type: str = 'USER',
@@ -177,84 +178,90 @@ class NeaktorApiClient:
                   page_size: int = DEFAULT_PAGE_SIZE,
                   task_ids: set = None,
                   **params
-                  ) -> List[dict]:
+                  ) -> List[Task]:
         """
         https://developers.neaktor.com/#/tasks
         :param task_ids: set of task ids to get
         :param page_size: objects number per page
         :param params: any get parameters
-        :return: tasks list
+        :return: list of Tasks objects
         """
 
         api_path = 'v1/tasks/'
-        objects = self._get_objects(api_path=api_path,
-                                    page_size=page_size,
-                                    object_ids=task_ids,
-                                    params=params)
-        return objects
+        task_objs = self._get_objects(api_path=api_path,
+                                      page_size=page_size,
+                                      object_ids=task_ids,
+                                      params=params)
+
+        tasks = [Task(data=task_obj) for task_obj in task_objs]
+        return tasks
 
     def get_task_models(self,
                         page_size: int = DEFAULT_PAGE_SIZE,
                         task_ids: set = None,
                         **params
-                        ) -> List[dict]:
+                        ) -> List[TaskModel]:
         """
         https://developers.neaktor.com/#/taskmodels
         :param task_ids: set of task models ids to get
         :param page_size: objects number per page
         :param params: any get parameters
-        :return: tasks list
+        :return: list of TaskModels objects
         """
 
         api_path = 'v1/taskmodels/'
-        objects = self._get_objects(api_path=api_path,
-                                    page_size=page_size,
-                                    object_ids=task_ids,
-                                    params=params)
-        return objects
+        task_model_objs = self._get_objects(api_path=api_path,
+                                            page_size=page_size,
+                                            object_ids=task_ids,
+                                            params=params)
+        task_models = [TaskModel(data=task_model_obj) for task_model_obj in task_model_objs]
+        return task_models
 
     def get_users(self,
                   page_size: int = DEFAULT_PAGE_SIZE,
                   user_ids: set = None,
                   **params
-                  ) -> List[dict]:
+                  ) -> List[User]:
         """
         https://developers.neaktor.com/#/users
         :param user_ids: set of user ids to get
         :param page_size: objects number per page
         :param params: any get parameters
-        :return: users list
+        :return: list of User objects
         """
 
         api_path = 'v1/users/'
-        objects = self._get_objects(api_path=api_path,
-                                    page_size=page_size,
-                                    object_ids=user_ids,
-                                    params=params)
-        return objects
+        user_objs = self._get_objects(api_path=api_path,
+                                      page_size=page_size,
+                                      object_ids=user_ids,
+                                      params=params)
+
+        users = [User(data=user_obj) for user_obj in user_objs]
+        return users
 
     def add_task(self,
                  model_id: str,
                  fields: dict = None,
                  assignee_id: int = None,
                  assignee_type: str = 'USER'
-                 ) -> Union[dict | None]:
+                 ) -> Union[Task | None]:
         """
         https://developers.neaktor.com/#/tasks/id/create
         :param model_id: id of model to create task to
         :param fields: dict of task fields
         :param assignee_id: id of assignee
         :param assignee_type: type of assignee ('USER', 'GROUP')
-        :return: created task
+        :return: created Task object
         """
 
-        result = self._add_object(api_path='v1/tasks',
-                                  parent_id=model_id,
-                                  fields=fields,
-                                  assignee_id=assignee_id,
-                                  assignee_type=assignee_type)
+        new_task_obj = self._add_object(api_path='v1/tasks',
+                                        parent_id=model_id,
+                                        fields=fields,
+                                        assignee_id=assignee_id,
+                                        assignee_type=assignee_type)
 
-        return result
+        new_task = Task(data=new_task_obj)
+        return new_task
 
     def delete_task(self,
                     task_id: int
@@ -271,16 +278,17 @@ class NeaktorApiClient:
     def add_comment(self,
                     task_id: str,
                     text: str
-                    ) -> Union[dict | None]:
+                    ) -> Union[Comment | None]:
         """
         https://developers.neaktor.com/#/comments/create
         :param task_id: if of task to add comment to
         :param text: text to add comment with
-        :return:
+        :return: created Comment object
         """
 
-        result = self._add_object(api_path='v1/comments',
-                                  parent_id=task_id,
-                                  text=text)
+        new_comment_obj = self._add_object(api_path='v1/comments',
+                                           parent_id=task_id,
+                                           text=text)
 
-        return result
+        new_comment = Comment(data=new_comment_obj)
+        return new_comment
