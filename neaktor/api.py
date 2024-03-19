@@ -8,10 +8,7 @@ from typing import Union, List
 import requests
 
 from neaktor.constants import DEFAULT_PAGE_SIZE
-
-
-class NoAuthParam(Exception):
-    pass
+from neaktor.exceptions import NoAuthParam, NeaktorException
 
 
 class NeaktorApiClient:
@@ -41,13 +38,13 @@ class NeaktorApiClient:
     def _base_api_request(self, api_path: str,
                           body: Union[dict, list] = None,
                           method: str = 'GET'
-                          ) -> dict:
+                          ) -> Union[dict, List[dict], None]:
         """
         Base request to neaktor web api
         :param api_path: api path
         :param body: request body
         :param method: HTTP method
-        :return:
+        :return: dict of response bods
         """
 
         response = None
@@ -63,33 +60,41 @@ class NeaktorApiClient:
                                      json=body)
         if response is not None:
             return response.json()
+        return None
 
     def _get_objects(self,
                      api_path: str,
                      params: dict = None,
                      page_size: int = DEFAULT_PAGE_SIZE,
+                     object_ids: set = None,
                      ) -> Union[List[dict], None]:
         """
         Base request for any neaktor objects list
         :param api_path: api path
         :param params: any get parameters
         :param page_size: objects number per page
+        :param object_ids: set of certain objects to get
         :return: objects list
         """
 
+        if object_ids:
+            object_ids = map(str, object_ids)
+            api_path += ",".join(object_ids)
+            result = self._base_api_request(api_path=api_path, method='GET')
+            return result
+
         api_path += f'?size={page_size}'
-        if params is not None:
+        if len(params) > 0:
             api_path += '&'
             params_list = [f'{field}={value}' for field, value in params.items()]
             api_path += '&'.join(params_list)
 
-        data = list()
+        data = []
         page_number = 0
         total = page_size + 1
 
         while len(data) < total:
             current_api_path = api_path + f'&page={page_number}'
-            print(current_api_path)
             result = self._base_api_request(api_path=current_api_path, method='GET')
             data += result['data']
             total = result['total']
@@ -117,7 +122,7 @@ class NeaktorApiClient:
         """
 
         api_path += f'/{parent_id}'
-        body = dict()
+        body = {}
 
         if assignee_id is not None:
             body['assignee'] = {'id': assignee_id,
@@ -136,56 +141,67 @@ class NeaktorApiClient:
                                         body=body,
                                         method='POST')
 
-        return result
+        if 'id' in result:
+            return result
+        raise NeaktorException(answer=result)
 
     def get_tasks(self,
                   page_size: int = DEFAULT_PAGE_SIZE,
+                  task_ids: set = None,
                   **params
                   ) -> List[dict]:
         """
         https://developers.neaktor.com/#/tasks
+        :param task_ids: set of task ids to get
         :param page_size: objects number per page
         :param params: any get parameters
         :return: tasks list
         """
 
-        api_path = 'v1/tasks'
+        api_path = 'v1/tasks/'
         objects = self._get_objects(api_path=api_path,
                                     page_size=page_size,
+                                    object_ids=task_ids,
                                     params=params)
         return objects
 
-    def get_task_modes(self,
-                       page_size: int = DEFAULT_PAGE_SIZE,
-                       **params
-                       ) -> List[dict]:
+    def get_task_models(self,
+                        page_size: int = DEFAULT_PAGE_SIZE,
+                        task_ids: set = None,
+                        **params
+                        ) -> List[dict]:
         """
         https://developers.neaktor.com/#/taskmodels
+        :param task_ids: set of task models ids to get
         :param page_size: objects number per page
         :param params: any get parameters
         :return: tasks list
         """
 
-        api_path = 'v1/taskmodels'
+        api_path = 'v1/taskmodels/'
         objects = self._get_objects(api_path=api_path,
                                     page_size=page_size,
+                                    object_ids=task_ids,
                                     params=params)
         return objects
 
     def get_users(self,
                   page_size: int = DEFAULT_PAGE_SIZE,
+                  user_ids: set = None,
                   **params
                   ) -> List[dict]:
         """
         https://developers.neaktor.com/#/users
+        :param user_ids: set of user ids to get
         :param page_size: objects number per page
         :param params: any get parameters
         :return: users list
         """
 
-        api_path = 'v1/users'
+        api_path = 'v1/users/'
         objects = self._get_objects(api_path=api_path,
                                     page_size=page_size,
+                                    object_ids=user_ids,
                                     params=params)
         return objects
 

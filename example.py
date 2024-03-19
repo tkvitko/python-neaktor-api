@@ -1,3 +1,7 @@
+"""
+Usage example
+"""
+
 from neaktor.api import NeaktorApiClient
 
 
@@ -8,10 +12,10 @@ if __name__ == '__main__':
     my_tasks = api.get_tasks()
     print(len(my_tasks))
 
-    my_users = api.get_users()
+    my_users = api.get_users(user_ids={1, 2})
     print(len(my_users))
 
-    my_task_models = api.get_task_modes()
+    my_task_models = api.get_task_models()
     print(my_task_models)
 
     new_task = api.add_task(model_id='my_model_id',
