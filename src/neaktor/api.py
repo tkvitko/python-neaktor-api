@@ -58,6 +58,13 @@ class NeaktorApiClient:
                                      headers=self.request_headers,
                                      timeout=self.timeout,
                                      json=body)
+
+        elif method == 'DELETE':
+            response = requests.delete(url=self.base_url + api_path,
+                                       headers=self.request_headers,
+                                       timeout=self.timeout,
+                                       json=body)
+
         if response is not None:
             return response.json()
         return None
@@ -145,6 +152,27 @@ class NeaktorApiClient:
             return result
         raise NeaktorException(answer=result)
 
+    def _delete_object(self,
+                       api_path: str,
+                       object_id: int = None,
+                       object_ids: set[int] = None,
+                       ) -> Union[dict, None]:
+        """
+        Base request for any neaktor object delete
+        :param api_path: api path
+        :param object_id: id of the object
+        :return: result of deletion
+        """
+
+        body = list(object_ids) if object_ids is not None else None
+        api_path = api_path + f'/{object_id}' if object_id is not None else api_path
+        result = self._base_api_request(api_path=api_path, method='DELETE', body=body)
+
+        if 'deleted' in result:
+            if result['deleted'] is True:
+                return result
+        raise NeaktorException(answer=result)
+
     def get_tasks(self,
                   page_size: int = DEFAULT_PAGE_SIZE,
                   task_ids: set = None,
@@ -226,6 +254,18 @@ class NeaktorApiClient:
                                   assignee_id=assignee_id,
                                   assignee_type=assignee_type)
 
+        return result
+
+    def delete_task(self,
+                    task_id: int
+                    ) -> dict:
+        """
+        https://developers.neaktor.com/#/tasks/id/delete
+        :param task_id: id of task
+        :return: result of deletion
+        """
+        result = self._delete_object(api_path='v1/tasks',
+                                     object_id=task_id)
         return result
 
     def add_comment(self,
