@@ -2,7 +2,7 @@
 Usage example
 """
 
-from neaktor.api import NeaktorApiClient
+from src.neaktor import NeaktorApiClient
 
 
 if __name__ == '__main__':

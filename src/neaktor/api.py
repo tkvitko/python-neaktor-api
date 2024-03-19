@@ -7,8 +7,8 @@ from typing import Union, List
 
 import requests
 
-from neaktor.constants import DEFAULT_PAGE_SIZE
-from neaktor.exceptions import NoAuthParam, NeaktorException
+from .constants import DEFAULT_PAGE_SIZE
+from .exceptions import NoAuthParam, NeaktorException
 
 
 class NeaktorApiClient:

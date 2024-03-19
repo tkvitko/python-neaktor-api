@@ -1,3 +1,6 @@
 venv/
 .idea/
-neaktor/__pycache__
+src/neaktor/__pycache__
+dist/
+LICENCE
+pyproject.toml
